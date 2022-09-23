@@ -1,0 +1,41 @@
+name: Deploy ASP.NET CORE
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  AZURE_WEBAPP_NAME: SSUSOFT123456
+  AZURE_WEBAPP_PATH: '.'
+  DOTNET_VERSION: '6.0.400'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      
+      - uses: actions/checkout@master
+
+      - name: Login via Azure CLI
+        uses: azure/login@v1
+        with: 
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      
+      
+      - name: setup .net core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '${{ env.Dotnet_version }}'
+
+      - name: Dotnet build + publish
+        run: 
+          dotnet build --configuration release
+          dotnet publish -c Release -o '${{ env.AZURE_WEBAPP_PATH }}/myapp'
+
+      - name: Deploy to App Service
+        uses: azure/webapps-deploy@v2
+        with: 
+          app_name: ${{ env.AZURE_WEBAPP_NAME }}
+          package: '${{ env.AZURE_WEBAPP_PATH }}/myapp'
+
